@@ -1,24 +1,26 @@
-a <- read.table("household_power_consumption.txt", sep=";",comment.char="",header=TRUE, stringAsFactors=FALSE)
-a1 <- a[a$Date >="2007-02-01" & a$Date<="2007-02-02", ]
-
-aDate1 <- strptime(a1$Date, "%d/%m/%Y")
-
-a1$Date <-aDate1
-
-a1<- within(a1, { timestamp=format(as.POSIXct(paste(Date, Time)), "%Y-%m-%d %H:%M:%S") })
-
-a1$Voltage <-as.numeric(a1$Voltage)
-a1$Global_active_power <-as.numeric(a1$Global_active_power)
-a1$Global_reactive_power <-as.numeric(a1$Global_reactive_power)
-
-hist(a1$Global_active_power,col="red", main="Global Active Power", xlab="Global Active Power (kilowatts)")
+if (!file.exists("household_power_consumption.txt"))
+  fileUrl <- "https://d396qusza40orc.cloudfront.net/exdata%2Fdata%2Fhousehold_power_consumption.zip"
+  download.file(fileUrl, destfile = "household_power_consumption.zip")
+  unzip("household_power_consumption.zip")
 
 
+colNames = c("Date", "Time", "Global_active_power", "Global_reactive_power", "Voltage", "Global_intensity", 
+               "Sub_metering_1", "Sub_metering_2", "Sub_metering_3")
+a <- read.table(pipe('grep "^[1-2]/2/2007" "household_power_consumption.txt"'), sep = ';', na.strings="?", col.names = colNames)
 
-axis.Date(1, at = seq(d[1], d[100], length.out=25),
-        labels = seq(d[1], d[100], length.out=25),
-        format= "%m/%d/%Y", las = 2)
+
+aDate1 <- strptime(a$Date, "%d/%m/%Y")
+a$Date <-aDate1
+
+data<- within(a, { timestamp=format(as.POSIXct(paste(Date, Time)), "%Y-%m-%d %H:%M:%S") })
+
+data$Voltage <-as.numeric(data$Voltage)
+data$Global_active_power <-as.numeric(data$Global_active_power)
+data$Global_reactive_power <-as.numeric(data$Global_reactive_power)
 
 
-plot(a1$Global_active_power~weekday(a1$timestamp),type="l",
-     xlab="Date",ylab="power")
+if (length(dev.list()) == 0) { dev.new() }
+dev.copy(png, file = "Plot1.png", width = 480, height = 480)
+hist(data$Global_active_power,col="red", main="Global Active Power", xlab="Global Active Power (kilowatts)")
+dev.off()
+
